@@ -6,7 +6,8 @@ from hashlib import sha3_256
 from os.path import join
 from datetime import datetime
 import pathlib
-from importlib.machinery import SourceFileLoader
+import importlib.util
+import traceback
 
 
 class CCThread:
@@ -20,11 +21,12 @@ class CCThread:
         self._file = None
         self._root = root
         for thread in threading.enumerate():
-            if thread.name.split(',')[1] == self._thread_name.split(',')[1]:
-                self.thread = thread
-                self._file = thread.name.split(',')[3]
-                self._drive = thread.name.split(',')[2]
-                break
+            if len(thread.name.split(',')) == 4:
+                if thread.name.split(',')[1] == self._thread_name.split(',')[1]:
+                    self.thread = thread
+                    self._file = thread.name.split(',')[3]
+                    self._drive = thread.name.split(',')[2]
+                    break
         if self._thread is None:
             self._file = file
             self._drive = drive
@@ -35,16 +37,22 @@ class CCThread:
     @staticmethod
     def _run(file, drive, root):
         path1 = join(root, 'drives', drive, 'libs')
-        path2 = join(root, 'drives', drive, pathlib.Path(file).parent)
+        path2 = join(root, 'drives', drive, str(pathlib.Path(file).parent.absolute())[1:])
+        path3 = join(root, 'drives', drive, file[1:])
         try:
             sys.path.extend([path1, path2])
-            module = SourceFileLoader(pathlib.Path(file).name, path2).load_module()
+            modname = pathlib.Path(file).name
+            spec = importlib.util.spec_from_file_location(modname, path3)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[modname] = module
+            spec.loader.exec_module(module)
             module.main()
         except Exception as e:
             date = datetime.now().isoformat().replace(':', '-').replace(' ', '_')
             with open(join(root, 'drives', drive, 'logs', f"crash_{date}.txt"),
                       'w') as f:
-                f.write(f"Error while executing '{file}' at {date}: \n{str(e)}")
+                exc = '\n'.join(traceback.format_exception(type(e), e, e.__traceback__))
+                f.write(f"Error while executing '{file}' at {date}: \n{exc}")
         finally:
             if path1 in sys.path:
                 sys.path.remove(path1)
@@ -74,10 +82,11 @@ def fast_hash(data):
 
 def kill_all(drive=None):
     for thread in threading.enumerate():
-        if (thread.name.split(',')[2] == drive) or (drive is None):
-            if thread.isAlive():
-                exc = ctypes.py_object(KeyboardInterrupt)
-                res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), exc)
-                if res > 1:
-                    ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
-                    raise SystemError(f"PyThreadState_SetAsyncExc failed on thread '{thread.ident}' during 'killall'")
+        if len(thread.name.split(',')) == 4:
+            if (thread.name.split(',')[2] == drive) or (drive is None):
+                if thread.isAlive():
+                    exc = ctypes.py_object(KeyboardInterrupt)
+                    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), exc)
+                    if res > 1:
+                        ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
+                        raise SystemError(f"PyThreadState_SetAsyncExc failed on thread '{thread.ident}' during 'killall'")
