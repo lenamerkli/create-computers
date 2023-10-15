@@ -4,6 +4,7 @@ from random import randint
 import ctypes
 from hashlib import sha3_256
 from os.path import join
+from os import listdir
 from datetime import datetime
 import pathlib
 import importlib.util
@@ -89,4 +90,14 @@ def kill_all(drive=None):
                     res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), exc)
                     if res > 1:
                         ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
-                        raise SystemError(f"PyThreadState_SetAsyncExc failed on thread '{thread.ident}' during 'killall'")
+                        raise SystemError(
+                            f"PyThreadState_SetAsyncExc failed on thread '{thread.ident}' during 'killall'")
+
+
+def run_hook(root, drive, hook):
+    root_path = join(root, 'drives', drive, 'hooks', hook)
+    files = listdir(root_path)
+    for file in files:
+        if file.endswith('.py'):
+            c = CCThread(root=root, file=join('hooks', hook, file), drive=drive)
+            c.run()
