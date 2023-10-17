@@ -37,7 +37,7 @@ class CCThread:
 
     @staticmethod
     def _run(file, drive, root):
-        path1 = join(root, 'drives', drive, 'libs')
+        path1 = join(root, 'libs', 'libs')
         path2 = join(root, 'drives', drive, str(pathlib.Path(file).parent.absolute())[1:])
         path3 = join(root, 'drives', drive, file[1:])
         try:
