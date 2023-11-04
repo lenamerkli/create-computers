@@ -1,0 +1,10 @@
+{% extends '_base.html' %}
+
+{% block main %}
+<h1>{{ file }}</h1>
+<ul>
+    {% for element in files %}
+        <li><a href="/device/computer/{{ web }}/files/{{ file }}/element">{{ element }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}

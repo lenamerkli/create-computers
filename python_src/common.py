@@ -40,6 +40,7 @@ class CCThread:
         path1 = join(root, 'libs', 'libs')
         path2 = join(root, 'drives', drive, str(pathlib.Path(file).parent.absolute())[1:])
         path3 = join(root, 'drives', drive, file[1:])
+        path4 = join(root, 'drives', drive, 'modules')
         try:
             sys.path.extend([path1, path2])
             modname = pathlib.Path(file).name
@@ -57,8 +58,12 @@ class CCThread:
         finally:
             if path1 in sys.path:
                 sys.path.remove(path1)
-            if path1 in sys.path:
+            if path2 in sys.path:
                 sys.path.remove(path2)
+            if path3 in sys.path:
+                sys.path.remove(path3)
+            if path4 in sys.path:
+                sys.path.remove(path4)
 
     def get_id(self):
         return self._thread_id
