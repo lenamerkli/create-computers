@@ -1,0 +1,25 @@
+{
+  "type": "create:milling",
+  "ingredients": [
+    {
+      "item": "minecraft:sand"
+    }
+  ],
+  "processingTime": 100,
+  "results": [
+    {
+      "count": 2,
+      "item": "create_computers:milled_sand"
+    },
+    {
+      "chance": 0.5,
+      "count": 1,
+      "item": "create_computers:milled_sand"
+    },
+    {
+      "chance": 0.75,
+      "count": 1,
+      "item": "minecraft:clay_ball"
+    }
+  ]
+}
